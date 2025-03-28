@@ -1,0 +1,70 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+
+# Data for AD38 (colony)
+od_values = [4.24, 2.09, 1.18, 0.62, 0.38, 0.22, 0.10]
+cfu_values = [1.14e10, 1.6e9, 1.54e10, 2.24e9, 2.68e9, 2.2e8, 7.8e8]
+std_devs=[9.43E+07, 9.43E+08,1.64E+09, 4.71E+07, 2.45E+08, 7.12E+07, 4.71E+07]
+
+
+# Convert to numpy arrays
+od_array = np.array(od_values)
+cfu_array = np.array(cfu_values)
+
+# Perform linear regression
+slope, intercept, r_value, p_value, std_err = stats.linregress(od_array, cfu_array)
+
+# Create the line of best fit
+line_x = np.linspace(0, max(od_array)*1.1, 100)
+line_y = slope * line_x + intercept
+
+# Create the plot
+plt.figure(figsize=(10, 6))
+
+# Plot error bars first (with same color as scatter points)
+plt.errorbar(od_array, cfu_array, yerr=std_devs, fmt='o', capsize=5, color='blue', alpha=0.5, label='Data points')
+
+# Remove the scatter plot since errorbar already shows the points
+# plt.scatter(od_array, cfu_array, color='blue', alpha=0.5, label='Data points')
+
+# Plot the line of best fit
+plt.plot(line_x, line_y, color='black', label=f'Best fit line (R² = {r_value**2:.3f})')
+
+# Customize the plot
+plt.xlabel('OD Values')
+plt.ylabel('CFU/ml')
+plt.title('OD vs CFU Count (AD38 grown from frozen stock)')
+plt.grid(False)
+plt.legend(loc='upper left')
+
+# Add the equation to the top right corner
+equation = f'CFU = {slope:.2e}×OD + {intercept:.2e}'
+plt.text(0.95, 0.95, equation, 
+         transform=plt.gca().transAxes,
+         horizontalalignment='right',
+         verticalalignment='bottom',
+         fontsize=10,
+         bbox=dict(facecolor='white', alpha=0.6))
+
+plt.tight_layout()
+plt.show()
+
+# Print the statistical information
+print(f"Linear regression statistics:")
+print(f"Slope: {slope:.4e}")
+print(f"Intercept: {intercept:.4e}")
+print(f"R-squared: {r_value**2:.4f}")
+
+'''
+# Data for AD38 (frozen stock)
+od_values = [4.24, 2.09, 1.18, 0.62, 0.38, 0.22, 0.10]
+cfu_values = [1.14e10, 1.6e9, 1.54e10, 2.24e9, 2.68e9, 2.2e8, 7.8e8]
+std_devs=[9.43E+07, 9.43E+08,1.64E+09, 4.71E+07, 2.45E+08, 7.12E+07, 4.71E+07]
+
+
+OD VS CFU 0.2 from colony
+od_values = [4.33, 2.14, 1.05, 0.63, 0.40, 0.20, 0.08]
+cfu_values = [3e9, 2.6e9, 2.4e9, 1.06e9, 1.08e9, 1.38e9, 1.2e8]
+std_devs=[2.49E+08,5.89E+08,1.63E+08,8.06E+07,3.27E+07,1.73E+08,9.43E+06]
+'''

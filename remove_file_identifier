@@ -1,0 +1,29 @@
+import json
+
+def remove_zone_identifier(
+    infile="/home/urte/MEDIAR-main/train_tools/data_utils/mapping_fine_tuning.json",
+    outfile="/home/urte/MEDIAR-main/train_tools/data_utils/mapping_fine_tuning_1.json"
+):
+    """
+    Reads a JSON file, removes any entries containing ':Zone.Identifier'
+    in 'img' or 'label', and writes the filtered results to another file.
+    """
+    with open(infile, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    # Filter out any entries where img or label has ':Zone.Identifier'
+    filtered_entries = [
+        item for item in data['labeled']
+        if ':Zone.Identifier' not in item['img'] and ':Zone.Identifier' not in item['label']
+    ]
+
+    # Assign filtered entries back to the dictionary
+    data['labeled'] = filtered_entries
+
+    # Write the filtered data to outfile
+    with open(outfile, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=4)
+
+if __name__ == '__main__':
+    remove_zone_identifier()
+    print("Filtering completed successfully.")

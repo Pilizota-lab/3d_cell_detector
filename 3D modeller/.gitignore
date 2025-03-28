@@ -1,0 +1,5 @@
+
+*.tiff
+*.npy
+masks_new/masks/*.png
+masks_new/overlay/*.png

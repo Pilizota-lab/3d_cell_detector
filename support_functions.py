@@ -5,19 +5,57 @@ import os
 import matplotlib.pyplot as plt
 from pathlib import Path
 import numpy as np
+import pandas as pd
+import re
 
 
-
+def numerical_sort_key(s):
+    return [int(text) if text.isdigit() else text.lower() for text in re.split ('([0-9]+)', s)]
+    
 def load_working_model(path_to_model):
 # Load and Run Cellpose Model
     model =  models.CellposeModel(pretrained_model=path_to_model, gpu=True)
     return model
 
+def update_processed_directories_log(directory, log_file_path):
+    """Update the log file with the processed directory."""
+    with open(log_file_path, 'a') as log_file:
+        log_file.write(directory + '\n')
+    print(f"Directory {directory} added to log.")
+
+def process_directory(directory, model, model_identifier):
+    images = load_images(directory)
+
+    # Create a directory for results inside the current directory
+    results_dir = os.path.join(directory, f'results_model{model_identifier}')
+    if not os.path.exists(results_dir):
+        os.makedirs(results_dir)
+
+    # Run cellpose model
+        masks, flows, styles = model.eval(images, diameter=None, channels=[0,0], compute_masks=True, do_3D=True)
+
+    # Save Masks, Overlays, and create 3D Stack
+    io.save_masks(images, masks, png=True, save_path=results_dir)
+    #save_masks_overlay(images, masks, results_dir)
+    create_3d_stack(masks, results_dir)
+
+    # Count Objects and Save the Count
+    number_of_cells = count_objects(masks, results_dir)
+    count_filename = os.path.join(results_dir, 'cell_count.txt')
+    with open(count_filename, 'w') as file:
+        file.write(str(number_of_cells))
+
+    return number_of_cells
+
+
 def load_images(path_to_images):
     img_dir = path_to_images
+    # Sort the files using the updated numerical_sort_key
     image_files = [f for f in os.listdir(img_dir) if f.endswith('.tiff')]
+    sorted_image_files= sorted(image_files, key=numerical_sort_key)
+
     images = []
-    for image_file in image_files:
+    for image_file in sorted_image_files:
         image_path = os.path.join(img_dir, image_file)
         image = io.imread(image_path)
         # Calculate the new dimensions
@@ -28,37 +66,32 @@ def load_images(path_to_images):
         shrunken_image = transform.resize(image, (new_height, new_width), anti_aliasing=True)
         images.append(shrunken_image)
     return images
-
+'''
 def save_masks_overlay(images, masks, save_directory):
-    # Create image mask overlay and save images
+    # Ensure the directories for saving masks and overlays exist
+    masks_dir = os.path.join(save_directory, 'masks')
+    overlay_dir = os.path.join(save_directory, 'overlay')
+    Path(masks_dir).mkdir(parents=True, exist_ok=True)
+    Path(overlay_dir).mkdir(parents=True, exist_ok=True)
 
-    Path(f"{save_directory}/masks").mkdir(parents=True, exist_ok=True)
-    Path(f"{save_directory}/overlay").mkdir(parents=True, exist_ok=True)
+    # Save masks and overlays
+    for i, (image, mask) in enumerate(zip(images, masks)):
+        mask_path = os.path.join(masks_dir, f'image_{i}.png')
+        overlay_path = os.path.join(overlay_dir, f'image_{i}.png')
 
-    zip_masks = zip(images, masks)
-    labelled_images = [color.label2rgb(mask, img, alpha = 0.2) for img, mask in zip_masks]
+        plt.imsave(mask_path, mask)
+        labeled_image = color.label2rgb(mask, image, alpha=0.2)
+        plt.imsave(overlay_path, labeled_image)
 
-    mask_dir = 'masks'
+    return [color.label2rgb(mask, image, alpha=0.2) for image, mask in zip(images, masks)]
 
-    for i, image in enumerate(masks):
-        image_filename = f'image_{i}.png'  # You can adjust the filename pattern
-        image_path = os.path.join(save_directory, mask_dir, image_filename)
-        plt.imsave(image_path, image)
-
-    lab_img_dir = 'overlay'
-
-    for i, image in enumerate(labelled_images):
-        image_filename = f'image_{i}.png'  # You can adjust the filename pattern
-        image_path = os.path.join(save_directory, lab_img_dir, image_filename)
-        plt.imsave(image_path, image)
-    
-    return labelled_images
-
+'''
 
 #Create 3d stack
 
-def create_3d_stack(masks):
-    Path("3d_images").mkdir(parents=True, exist_ok=True)
+def create_3d_stack(masks,save_directory):
+    stack_dir = os.path.join(save_directory, "3d_images")
+    Path(stack_dir).mkdir(parents=True, exist_ok=True)
     # List of mask images
     mask_images = masks  # List of your mask images
 
@@ -80,11 +113,12 @@ def create_3d_stack(masks):
     ax.set_ylabel('Y')
     ax.set_zlabel('Slice (Object Index)')
 
-    plt.savefig("3d_images/3d_image.png", dpi=300)
+    plt.savefig(os.path.join(stack_dir, "3d_image.png"), dpi=300)
 
 
-def create_3d_projection(masks):
-    Path("3d_images").mkdir(parents=True, exist_ok=True)
+def create_3d_projection(masks,save_directory):
+    projection_dir=os.path.join(save_directory, '3d_projection')
+    Path(projection_dir).mkdir(parents=True, exist_ok=True)
 
     # List of mask images
     mask_images = masks
@@ -128,10 +162,10 @@ def create_3d_projection(masks):
         plt.xlabel('X')
         plt.ylabel('Y')
 
-        plt.savefig("3d_images/3d_projection.png", dpi = 300)
+        plt.savefig(os.path.join(projection_dir, "3d_images/3d_projection.png"), dpi = 300)
 
 
-def count_objects(masks):
+def count_objects(masks, save_directory):
     # Initialize arrays to store center points
     centers = []
 
@@ -149,8 +183,8 @@ def count_objects(masks):
     # Convert centers list to array
     centers = np.array(centers)
 
-    # Define grouping distance (10 pixels by 10 pixels)
-    grouping_distance = 10
+    # Define grouping distance (2 pixels by 2 pixels)
+    grouping_distance = 15
 
     # Initialize dictionary to store color assignments
     color_assignments = {}
@@ -178,9 +212,51 @@ def count_objects(masks):
 
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
-    ax.set_zlabel('Frame')
-    total_entries = len(ax.legend().legendHandles)
-    ax.legend([f'Number of unique objects: {total_entries}'])                 
+    ax.set_zlabel('Z')
+    total_objects = len(ax.legend().legend_handles)
+    ax.legend([f'Number of total objects:{total_objects}'])
 
-    plt.savefig("3d_images/object_count.png", dpi = 300)
-    return total_entries
+    # Save the scatter plot
+    scatter_plot_path = os.path.join(save_directory, "3d_images/object_count_scatter_plot.png")
+    plt.savefig(scatter_plot_path, dpi=300)
+
+    # Save the total count to a text file
+    total_objects = len(color_assignments)
+    count_filename = os.path.join(save_directory, 'cell_count.txt')
+    with open(count_filename, 'w') as count_file:
+        count_file.write(str(total_objects))
+
+    return total_objects
+
+
+def save_results_to_excel(folder_names, cell_counts, output_path):
+    """Save cell count results to an Excel file."""
+    results_df = pd.DataFrame({'Folder Name': folder_names, 'Cell Count': cell_counts})
+    results_df.to_excel(output_path, index=False)
+    print(f"Results saved to {output_path}")
+
+def collect_and_save_counts(base_directory, model_identifier, output_file):
+    folder_names = []
+    cell_counts = []
+    
+    # Iterate through each directory in the base directory
+    for dir_name in os.listdir(base_directory):
+        dir_path = os.path.join(base_directory, dir_name)
+        results_dir_name = f'results_model{model_identifier}'
+        results_dir_path = os.path.join(dir_path, results_dir_name)
+        count_file_path = os.path.join(results_dir_path, 'cell_count.txt')
+        
+        # Check if the cell count file exists
+        if os.path.isdir(dir_path) and os.path.exists(count_file_path):
+            with open(count_file_path, 'r') as count_file:
+                count = count_file.read().strip()
+                folder_names.append(dir_name)
+                cell_counts.append(int(count))
+                
+    # Save the results to an Excel file
+    if folder_names and cell_counts:
+        results_df = pd.DataFrame({'Folder Name': folder_names, 'Cell Count': cell_counts})
+        results_df.to_excel(output_file, index=False)
+        print(f"Results saved to {output_file}")
+    else:
+        print("No results to save.")
