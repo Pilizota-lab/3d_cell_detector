@@ -33,6 +33,12 @@ def overlay_masks(image_folder, mask_folder, output_folder):
             print(f"Dimension mismatch for {image_file}, skipping.")
             continue
 
+        #Check that image is not empty
+        std_dev=np.std(image)
+        if std_dev<1:
+            print(f"Image Empty: {image_file}, skipping.")
+            continue
+
         # Ensure the mask is integer type for label2rgb
         mask = mask.astype(int)
 
