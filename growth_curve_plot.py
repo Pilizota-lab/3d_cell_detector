@@ -83,7 +83,7 @@ def plot_cell_counts_separate_timelines(output_filename,
         print("No main data points to plot after filtering.")
     ax1.tick_params(axis='y', labelcolor='tab:blue')
     ax1.set_yscale('log')
-    ax1.set_ylim(1e7, 1e12)  # Adjusted y-axis limits for log scale
+    ax1.set_ylim(1e6, 1e9)  # Adjusted y-axis limits for log scale
 
     # For controls, we'll use a secondary axis
     if undiluted_data_filtered or diluted_data_filtered:
@@ -91,7 +91,7 @@ def plot_cell_counts_separate_timelines(output_filename,
         ax2.set_ylabel('Control Cell Concentration (CFU/ml)', color='tab:red')
         ax2.tick_params(axis='y', labelcolor='tab:red')
         ax2.set_yscale('log')
-        ax2.set_ylim(1e7, 1e12)
+        ax2.set_ylim(1e6, 1e9)
 
         # Plot diluted control data with error bars
         if diluted_data_filtered and std_devs:
@@ -100,7 +100,7 @@ def plot_cell_counts_separate_timelines(output_filename,
                 ax2.errorbar(
                     [time for time, _ in diluted_data_filtered],
                     [OD for _, OD in diluted_data_filtered],
-                    yerr=std_devs,
+                    #yerr=std_devs,
                     fmt='^', 
                     color='tab:red',
                     linestyle='-',
@@ -146,7 +146,7 @@ def plot_cell_counts_separate_timelines(output_filename,
     else:
         ax1.legend(lines, labels, loc='upper left')
 
-    plt.title('AD38 (deltaMotAB MG1655) Cell Concentration VS Time')
+    plt.title('AD38 (deltaMotAB MG1655) Cell Concentration +5 mg/ml Starch VS Time')
     fig.tight_layout()
 
     if save_path:
@@ -156,23 +156,21 @@ def plot_cell_counts_separate_timelines(output_filename,
     plt.show()
 
 # Example usage (replace with your actual file paths and data):
-output_filename = r'/home/urte/3D modeller/3d_cell_detector/data/raw/ad38/28_01_25/cell_counts_summary_temp_5.xlsx'
+output_filename = r'/home/urte/3D modeller/3d_cell_detector/data/raw/ad38/5mg_mlstarch/cell_counts_summary_temp_5.xlsx'
 save_path = 'ad38_counts_separate_timeline_controls.tiff'
 sheet_name = 'Sheet1'
-std_devs = [3.77E+07,5.89E+07,3.35E+08,7.36E+08,1.25E+09,1.42E+09,7.72E+08,2.27E+09
-]
+#std_devs = [3.77E+07,5.89E+07,3.35E+08,7.36E+08,1.25E+09,1.42E+09,7.72E+08,2.27E+09]
 
 control_data_diluted = [
-    ('2024-03-01 18:40:00', 1.40*10**8),
-    ('2024-03-02 10:07:00', 6.60*10**8),
-    ('2024-03-02 13:07:00', 1.10*10**10),
-    ('2024-03-02 16:51:00', 2.20*10**9),
-    ('2024-03-02 18:17:00', 2.16*10**10),    
-    ('2024-03-03 13:40:00', 1.37*10**11),
-    ('2024-03-03 16:05:00', 1.58*10**10),
-    ('2024-03-03 17:37:00', 2.88*10**10)
+    ('2024-11-18 17:10:00', 7.50*10**7),
+    ('2024-11-19 10:50:00', 1.98*10**8),
+    ('2024-11-19 13:50:00', 2.59*10**8),
+    ('2024-11-19 16:50:00', 3.10*10**8),
+    ('2024-11-20 16:50:00', 3.38*10**8),
+    ('2024-11-20 17:50:00', 3.95*10**8),
+    ('2024-11-21 18:54:00', 3.37*10**8)
 ]
-'''
+
 control_data_undiluted=[
     ('2024-03-01 17:29:00', 1.75*10**8),
     ('2024-03-02 10:02:00', 2.86*10**8),
@@ -185,14 +183,14 @@ control_data_undiluted=[
 
 
 ]
-'''
+
 plot_cell_counts_separate_timelines(
     output_filename,
     save_path=save_path,
     sheet_name=sheet_name,
     control_data_diluted=control_data_diluted,
-    #control_data_undiluted=control_data_undiluted,
-    std_devs=std_devs,
+    control_data_undiluted=control_data_undiluted,
+    #std_devs=std_devs,
     max_hour=50
 )
 
@@ -259,14 +257,14 @@ AD28 01/18/24 diluted
 
 
 AD28 18/11/24 diluted
-('2024-03-01 17:29:00', 1.75*10**7),
-    ('2024-03-02 10:02:00', 2.86*10**7),
-    ('2024-03-02 13:40:00', 6.70*10**7),
-    ('2024-03-02 17:15:00', 1.72*10**8),
-    ('2024-03-02 18:15:00', 2.11*10**8),    
-    ('2024-03-03 12:57:00', 5.72*10**8),
-    ('2024-03-03 16:10:00', 6.62*10**8),
-    ('2024-03-03 18:20:00', 7.61*10**8)
+    ('2024-03-01 17:29:00', 2.70*10**6),
+    ('2024-03-02 10:02:00', 4.62*10**7),
+    ('2024-03-02 13:40:00', 1.22*10**8),
+    ('2024-03-02 17:15:00', 2.05*10**8),
+    ('2024-03-02 18:15:00', 2.23*10**8),    
+    ('2024-03-03 12:57:00', 3.15*10**8),
+    ('2024-03-03 16:10:00', 5.85*10**8),
+    ('2024-03-03 18:20:00', 5.58*10**8)
 
 AD28 18/11/24 undiluted
     ('2024-03-01 17:29:00', 1.75*10**7),
@@ -323,4 +321,24 @@ AD38 09/12/24 5mg/ml starch
     ('2024-11-20 16:50:00', 7.79*10**8),
     ('2024-11-20 17:50:00', 1.48*10**9),
     ('2024-11-21 18:54:00', 7.66*10**8)
+
+
+AD38 30_01_25 2mg/ml starch  
+    ('2024-11-18 19:32:00', 3.96*10**7),
+    ('2024-11-19 10:13:00', 1.59*10**8),
+    ('2024-11-19 12:40:00', 3.16*10**8),
+    ('2024-11-19 16:43:00', 5.62*10**8),
+    ('2024-11-19 18:00:00', 7.79*10**8),
+    ('2024-11-20 15:00:00', 1.48*10**9),
+    ('2024-11-20 18:00:00', 7.66*10**8)
+
+ AD38 25/01/25 diluted   
+    ('2024-03-01 18:40:00', 2.10*10**6),
+    ('2024-03-02 10:07:00', 1.23*10**8),
+    ('2024-03-02 13:07:00', 1.89*10**8),
+    ('2024-03-02 16:51:00', 2.70*10**8),
+    ('2024-03-02 18:17:00', 3.33*10**8),    
+    ('2024-03-03 13:40:00', 5.67*10**8),
+    ('2024-03-03 16:05:00', 3.93*10**8),
+    ('2024-03-03 17:37:00', 3.66*10**8)
 '''

@@ -5,7 +5,17 @@ import json
 from tqdm import tqdm
 from PIL import Image
 import numpy as np
+from pathlib import Path
 
+def segmentation_results(results_dir):
+   """Check whether segmentation has been carried out""" 
+   if not os.path.exists(results_dir):
+        return False
+   label_files = [f for f in os.listdir(results_dir) if f.endswith('_label.tiff')]
+   return len(label_files) > 0
+
+       
+        
 def is_image_valid(image_path):
     """Check if the image is valid and does not contain only zero values."""
     try:
@@ -31,14 +41,18 @@ def process_with_cellpose(base_directory):
     """Runs the overlay and 3D projection script with Cellpose."""
     print(f"Running Cellpose processing for directory: {base_directory}")
     python_exec_path = '/home/urte/miniconda3/envs/cellpose/bin/python'
-    script_path = '/home/urte/3D modeller/3d_cell_detector/stitch_and_overlay_with_cellpose.py'
-    subprocess.run([python_exec_path, script_path])
+    script_path = Path('/home/urte/3D modeller/3d_cell_detector/stitch_and_overlay_with_cellpose.py')
+    if not script_path.exists():
+        print(f"Script not found: {script_path}")
+    subprocess.run([python_exec_path, str(script_path)])
 
 def run_hdbscan_clustering(base_directory):
     """Runs the HDBSCAN clustering script."""
     print(f"Running HDBSCAN clustering for directory: {base_directory}")
     python_exec_path = '/home/urte/miniconda3/envs/mediar/bin/python'
-    script_path = '/home/urte/3D modeller/3d_cell_detector/hdbscan_clustering.py'
+    script_path = Path('/home/urte/3D modeller/3d_cell_detector/hdbscan_clustering.py')
+    if not script_path.exists():
+        print(f"Script not found: {script_path}")
     subprocess.run([python_exec_path, script_path])
 
 def main():
@@ -58,7 +72,6 @@ def main():
         dir_path = os.path.join(base_directory, dir_name)
         results_dir = os.path.join(dir_path, 'results')
 
-        # Check log only (no longer skipping if 'results' exists)
         if dir_name not in processed_directories:
             print(f"Processing directory: {dir_name}")
 

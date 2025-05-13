@@ -1,21 +1,21 @@
 import os
 import importlib
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('TkAgg') 
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import pandas as pd
+
 import support_functions as sf
 
 # Reload your module to ensure the latest changes are applied
 importlib.reload(sf)
 
-# Set the necessary environment variables and paths
+# SSet the necessary environment variables and paths
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 base_directory = "/home/urte/MEDIAR-main/growth curves test images"
-
-model_identifier = 'temporal_4'
-log_file_path = os.path.join(base_directory, 'processed_directories.log')
+model_identifier = 'temporal_5'
+log_file_path = os.path.join(base_directory, 'processed_directories_temporal_5.log')
 model = sf.load_working_model(r'/mnt/z/Urte/PhD/3D modeller/models/{}'.format(model_identifier))
 
 # Prepare lists to store results
@@ -42,7 +42,7 @@ for dir_name in tqdm(os.listdir(base_directory), desc="Processing directories"):
         print(f"Skipping already processed directory or file: {dir_name}")
 
 # Save the results to an Excel file if data was collected
-output_file = os.path.join(base_directory, 'cell_counts_summary.xlsx')
+output_file = os.path.join(base_directory, 'cell_counts_summary_temp_5.xlsx')
 if folder_names and cell_counts:
     sf.save_results_to_excel(folder_names, cell_counts, output_file)
 else:

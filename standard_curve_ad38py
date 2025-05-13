@@ -1,48 +1,43 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import stats
 
-# Data for AD38 (colony)
-od_values = [4.24, 2.09, 1.18, 0.62, 0.38, 0.22, 0.10]
-cfu_values = [1.14e10, 1.6e9, 1.54e10, 2.24e9, 2.68e9, 2.2e8, 7.8e8]
-std_devs=[9.43E+07, 9.43E+08,1.64E+09, 4.71E+07, 2.45E+08, 7.12E+07, 4.71E+07]
-
+# Data for AD38 0.88 (frozen stock) including origin
+od_values = [8.3, 5.8, 3.7,1.2, 0.60, 0.49, 0.32, 0.21]
+cfu_values = [5.0e9, 2.0e9, 1.0e9,4.0e8, 1.9e8, 9.0e7, 5e7, 9.0e6]
+std_devs = [4.0e06, 1.20e7, 1.95e06, 1.89E+06, 3.38E+05, 1.86E+05, 1.60E+05, 1.53E+04]
 
 # Convert to numpy arrays
 od_array = np.array(od_values)
 cfu_array = np.array(cfu_values)
+std_array = np.array(std_devs)
 
-# Perform linear regression
-slope, intercept, r_value, p_value, std_err = stats.linregress(od_array, cfu_array)
+# Linear regression forced through origin (no intercept)
+slope, _, _, _ = np.linalg.lstsq(od_array.reshape(-1, 1), cfu_array, rcond=None)
+intercept = 0
 
-# Create the line of best fit
-line_x = np.linspace(0, max(od_array)*1.1, 100)
-line_y = slope * line_x + intercept
+# Create line of best fit, starting at 0
+line_x = np.linspace(0, max(od_array) * 1.1, 100)
+line_y = slope * line_x
 
-# Create the plot
+# Plot
 plt.figure(figsize=(10, 6))
+plt.errorbar(od_array, cfu_array, yerr=std_array, fmt='o', capsize=6, color='blue', alpha=0.4, label='Data points')
+plt.plot(line_x, line_y, color='black', label='Best fit line (through origin)')
 
-# Plot error bars first (with same color as scatter points)
-plt.errorbar(od_array, cfu_array, yerr=std_devs, fmt='o', capsize=5, color='blue', alpha=0.5, label='Data points')
-
-# Remove the scatter plot since errorbar already shows the points
-# plt.scatter(od_array, cfu_array, color='blue', alpha=0.5, label='Data points')
-
-# Plot the line of best fit
-plt.plot(line_x, line_y, color='black', label=f'Best fit line (R² = {r_value**2:.3f})')
-
-# Customize the plot
+# Axes and labels
 plt.xlabel('OD Values')
 plt.ylabel('CFU/ml')
 plt.title('OD vs CFU Count (AD38 grown from frozen stock)')
+plt.xlim(left=0)
+plt.ylim(bottom=0)
 plt.grid(False)
 plt.legend(loc='upper left')
 
-# Add the equation to the top right corner
-equation = f'CFU = {slope:.2e}×OD + {intercept:.2e}'
-plt.text(0.95, 0.95, equation, 
+# Add regression equation
+equation = f'CFU = {slope[0]:.2e}×OD'
+plt.text(0.01, 0.85, equation,
          transform=plt.gca().transAxes,
-         horizontalalignment='right',
+         horizontalalignment='left',
          verticalalignment='bottom',
          fontsize=10,
          bbox=dict(facecolor='white', alpha=0.6))
@@ -50,21 +45,5 @@ plt.text(0.95, 0.95, equation,
 plt.tight_layout()
 plt.show()
 
-# Print the statistical information
-print(f"Linear regression statistics:")
-print(f"Slope: {slope:.4e}")
-print(f"Intercept: {intercept:.4e}")
-print(f"R-squared: {r_value**2:.4f}")
-
-'''
-# Data for AD38 (frozen stock)
-od_values = [4.24, 2.09, 1.18, 0.62, 0.38, 0.22, 0.10]
-cfu_values = [1.14e10, 1.6e9, 1.54e10, 2.24e9, 2.68e9, 2.2e8, 7.8e8]
-std_devs=[9.43E+07, 9.43E+08,1.64E+09, 4.71E+07, 2.45E+08, 7.12E+07, 4.71E+07]
-
-
-OD VS CFU 0.2 from colony
-od_values = [4.33, 2.14, 1.05, 0.63, 0.40, 0.20, 0.08]
-cfu_values = [3e9, 2.6e9, 2.4e9, 1.06e9, 1.08e9, 1.38e9, 1.2e8]
-std_devs=[2.49E+08,5.89E+08,1.63E+08,8.06E+07,3.27E+07,1.73E+08,9.43E+06]
-'''
+# Output regression slope
+print(f"Slope (CFU/OD): {slope[0]:.4e}")
